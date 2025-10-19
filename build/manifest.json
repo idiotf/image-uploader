@@ -1,0 +1,24 @@
+{
+  "name": "Image Uploader",
+  "description": "엔트리에 이미지 또는 소리를 업로드해줍니다.",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "dist/index.html"
+  },
+  "host_permissions": [
+    "https://me2do.naver.com/",
+    "https://entry-cdn.pstatic.net/",
+    "https://img.bloupla.net/"
+  ],
+  "permissions": [
+    "declarativeNetRequest"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "ruleset_1",
+      "enabled": true,
+      "path": "rules.json"
+    }]
+  }
+}
