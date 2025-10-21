@@ -26,20 +26,31 @@ import getShortenUrl from './utils/shorten-url'
 
 z.config(z.locales.ko())
 
+const allowedExts = [
+  '.jpg',
+  '.png',
+  '.bmp',
+  '.svg',
+  '.mp3',
+]
+
 const formSchema = z.object({
   file: z.file('파일을 선택하세요.'),
-  name: z.string(),
+  name: z.string().refine(
+    name => allowedExts.some(ext => name.endsWith(ext)),
+    `확장자는 ${allowedExts.join(', ')} 중 하나여야 합니다.`,
+  ),
   gzip: z.boolean(),
 })
 
 type FormSchema = z.infer<typeof formSchema>
 
 const App = () => {
-  const [ progress, setProgress ] = useState(-1)
+  const [ progress, setProgress ] = useState(1)
   const [ shortenUrl, setShortenUrl ] = useState('')
   const [ error, setError ] = useState<unknown>()
 
-  const isLoading = progress != -1 && progress != 1
+  const isLoading = progress != 1
 
   const form = useForm({
     resolver: zodResolver(formSchema),
