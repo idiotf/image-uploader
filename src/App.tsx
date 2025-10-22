@@ -34,12 +34,12 @@ const allowedExts = [
   '.mp3',
 ]
 
+const isAllowedExt = (name: string) => !name || allowedExts.some(ext => ext != name && name.endsWith(ext))
+const extError = `확장자는 ${allowedExts.join(', ')} 중 하나여야 합니다.`
+
 const formSchema = z.object({
   file: z.file('파일을 선택하세요.'),
-  name: z.string().refine(
-    name => allowedExts.some(ext => name.endsWith(ext)),
-    `확장자는 ${allowedExts.join(', ')} 중 하나여야 합니다.`,
-  ),
+  name: z.string().refine(isAllowedExt, extError),
   gzip: z.boolean(),
 })
 
@@ -63,6 +63,11 @@ const App = () => {
   const file = form.watch('file')
 
   const upload = useCallback(async ({ file, name, gzip }: FormSchema) => {
+    if (!name && !isAllowedExt(file.name)) return form.setError('name', {
+      type: 'pattern',
+      message: extError,
+    })
+
     setProgress(0)
 
     try {
