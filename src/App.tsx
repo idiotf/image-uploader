@@ -14,6 +14,14 @@ import {
   FormMessage,
 } from './components/ui/form'
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/ui/select'
+
 import { CopyButton } from './components/copy-button'
 import { Input } from './components/ui/input'
 import { Button } from './components/ui/button'
@@ -32,14 +40,14 @@ const allowedExts = [
   '.bmp',
   '.svg',
   '.mp3',
-]
+] as const
 
-const isAllowedExt = (name: string) => !name || allowedExts.some(ext => ext != name && name.endsWith(ext))
-const extError = `확장자는 ${allowedExts.join(', ')} 중 하나여야 합니다.`
+const removeExt = (name: string) => name.replace(/\.[^.]+$/, '')
 
 const formSchema = z.object({
   file: z.file('파일을 선택하세요.'),
-  name: z.string().refine(isAllowedExt, extError),
+  name: z.string(),
+  ext: z.enum(allowedExts),
   gzip: z.boolean(),
 })
 
@@ -56,22 +64,18 @@ const App = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      ext: '.png',
       gzip: false,
     },
   })
 
   const file = form.watch('file')
 
-  const upload = useCallback(async ({ file, name, gzip }: FormSchema) => {
-    if (!name && !isAllowedExt(file.name)) return form.setError('name', {
-      type: 'pattern',
-      message: extError,
-    })
-
+  const upload = useCallback(async ({ file, name, ext, gzip }: FormSchema) => {
     setProgress(0)
 
     try {
-      setShortenUrl(await getShortenUrl(await uploadToEntry(file, name || undefined, gzip)))
+      setShortenUrl(await getShortenUrl(await uploadToEntry(file, `${name || removeExt(file.name)}${ext}`, gzip)))
       setError('')
     } catch (e) {
       setShortenUrl('')
@@ -111,7 +115,25 @@ const App = () => {
               <FormItem>
                 <FormLabel>업로드 이름</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder={file?.name} />
+                  <div className='flex gap-2'>
+                    <Input {...field} placeholder={file && removeExt(file.name)} />
+                    <FormField
+                      control={form.control}
+                      name='ext'
+                      render={({ field }) =>
+                        <Select {...field} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allowedExts.map(ext =>
+                              <SelectItem key={ext} value={ext}>{ext}</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      }
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
