@@ -8,8 +8,7 @@
   },
   "host_permissions": [
     "https://me2do.naver.com/",
-    "https://entry-cdn.pstatic.net/",
-    "https://img.bloupla.net/"
+    "https://entry-cdn.pstatic.net/"
   ],
   "permissions": [
     "declarativeNetRequest"

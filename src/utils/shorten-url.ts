@@ -4,7 +4,7 @@ function urlWithParams(baseUrl: string | URL, params: Record<string, string>) {
   return url + ''
 }
 
-export default async function getShortenUrl(url: string) {
+export default async function getShortenUrl(url: string, init?: RequestInit) {
   url = url.replaceAll('script', 'scrip%74')
   const res = await fetch(urlWithParams('https://me2do.naver.com/common/requestJsonpV2.nhn', {
     svcCode: '0',
@@ -16,7 +16,7 @@ export default async function getShortenUrl(url: string) {
         sourceReferer: 'share',
       }),
     }),
-  }))
+  }), init)
   if (!res.ok) throw `error code ${res.status}`
 
   const text = await res.text()

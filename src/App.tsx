@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
 
@@ -30,7 +30,6 @@ import { Spinner } from './components/ui/spinner'
 import './style.css'
 
 import { uploadToEntry } from './utils/upload'
-import getShortenUrl from './utils/shorten-url'
 
 z.config(z.locales.ko())
 
@@ -69,21 +68,31 @@ const App = () => {
     },
   })
 
-  const file = form.watch('file')
+  const file: File | undefined = useWatch({
+    control: form.control,
+    name: 'file',
+  })
 
   const upload = useCallback(async ({ file, name, ext, gzip }: FormSchema) => {
     setProgress(0)
 
     try {
-      setShortenUrl(await getShortenUrl(await uploadToEntry(file, `${name || removeExt(file.name)}${ext}`, gzip)))
+      setShortenUrl(await uploadToEntry(file, {
+        name: `${name || removeExt(file.name)}${ext}`,
+        gzip,
+      }))
       setError('')
     } catch (e) {
-      setShortenUrl('')
-      setError(e)
+      if (e instanceof DOMException && e.name == 'NoModificationAllowedError') {
+        form.setError('name', { message: e.message })
+      } else {
+        setShortenUrl('')
+        setError(e)
+      }
     }
 
     setProgress(1)
-  }, [])
+  }, [form])
 
   return (
     <main className='w-96 p-4'>
