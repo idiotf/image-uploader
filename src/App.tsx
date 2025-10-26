@@ -55,6 +55,7 @@ type FormSchema = z.infer<typeof formSchema>
 const App = () => {
   const [ progress, setProgress ] = useState(1)
   const [ shortenUrl, setShortenUrl ] = useState('')
+  const [ errorMsg, setErrorMsg ] = useState('오류가 발생했습니다')
   const [ error, setError ] = useState<unknown>()
 
   const isLoading = progress != 1
@@ -83,10 +84,35 @@ const App = () => {
       }))
       setError('')
     } catch (e) {
-      if (e instanceof DOMException && e.name == 'NoModificationAllowedError') {
-        form.setError('name', { message: e.message })
+      let unknownError = false
+
+      if (e instanceof DOMException) {
+        switch (e.name) {
+          case 'NoModificationAllowedError':
+            form.setError('name', { message: e.message })
+            break
+
+          case 'QuotaExceededError':
+            form.setError('file', { message: e.message })
+            break
+
+          case 'TooManyRequestsError':
+          case 'UnknownError':
+            setShortenUrl('')
+            setErrorMsg(e.message)
+            setError(e)
+            break
+
+          default:
+            unknownError = true
+        }
       } else {
+        unknownError = true
+      }
+
+      if (unknownError) {
         setShortenUrl('')
+        setErrorMsg('오류가 발생했습니다')
         setError(e)
       }
     }
@@ -179,7 +205,7 @@ const App = () => {
               <CopyButton type='button' value={shortenUrl} />
             </>}
             {!error || <>
-              <Input readOnly value='오류가 발생했습니다' className='flex-1 text-red-500 text-sm' />
+              <Input readOnly value={errorMsg} className='flex-1 text-red-500 text-sm' />
               <CopyButton type='button' value={error + ''} />
             </>}
           </div>

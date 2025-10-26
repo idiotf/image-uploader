@@ -26,7 +26,7 @@ export function CopyButton({ value, onClick, ...props }: React.ComponentProps<ty
           {copied ? <Check /> : <Copy />}
         </Button>
       </TooltipTrigger>
-      <TooltipContent className='font-[Pretendard]'>{copied ? '복사됨' : '복사'}</TooltipContent>
+      <TooltipContent>{copied ? '복사됨' : '복사'}</TooltipContent>
     </Tooltip>
   )
 }

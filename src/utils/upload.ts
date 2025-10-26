@@ -2,20 +2,16 @@ import project from './project.json'
 import getShortenUrl from './shorten-url'
 import { createTar } from './tar'
 
-function streamToBlob(stream: ReadableStream, init?: ResponseInit) {
-  return new Response(stream, init).blob()
-}
+const streamToBlob = (stream: ReadableStream, init?: ResponseInit) => new Response(stream, init).blob()
 
-function withSignal<T>(promise: Promise<T>, signal: AbortSignal) {
-  return new Promise<T>((resolve, reject) => {
-    if (signal.aborted) return reject(signal.reason)
+const withSignal = <T>(promise: Promise<T>, signal: AbortSignal) => new Promise<T>((resolve, reject) => {
+  if (signal.aborted) return reject(signal.reason)
 
-    const onAbort = () => reject(signal.reason)
+  const onAbort = () => reject(signal.reason)
 
-    signal.addEventListener('abort', onAbort, { once: true })
-    promise.finally(() => signal.removeEventListener('abort', onAbort)).then(resolve, reject)
-  })
-}
+  signal.addEventListener('abort', onAbort, { once: true })
+  promise.finally(() => signal.removeEventListener('abort', onAbort)).then(resolve, reject)
+})
 
 function handleRejection<T>(promise: Promise<T>) {
   promise.catch(() => {})
@@ -63,14 +59,28 @@ export async function uploadToEntry(file: File, init: UploadInit = {}) {
     },
   }), signal))
 
-  await fetch('https://entry-cdn.pstatic.net/rest/project/upload', {
+  await isExistingName
+
+  const res = await fetch('https://entry-cdn.pstatic.net/rest/project/upload', {
     method: 'POST',
     body,
     signal,
   })
 
-  await isExistingName
-  signal.throwIfAborted()
+  if (!res.ok) switch (res.status) {
+    case 413:
+      throw new DOMException('용량이 너무 큽니다.', 'QuotaExceededError')
+    case 429:
+      throw new DOMException('업로드 횟수가 너무 많습니다.', 'TooManyRequestsError')
+    default:
+      throw new DOMException('업로드를 실패했습니다.', 'UnknownError')
+  }
+
+  const { ok } = await fetch(`https://entry-cdn.pstatic.net/uploads/${name}`, {
+    method: 'HEAD',
+    signal,
+  })
+  if (!ok) throw new DOMException('업로드를 실패했습니다.', 'UnknownError')
 
   return shortenUrl
 }
