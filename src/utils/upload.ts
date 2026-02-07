@@ -22,16 +22,17 @@ interface UploadInit {
   name?: string
   gzip?: boolean
   signal?: AbortSignal
+  shortenUrl?: boolean
 }
 
-export async function uploadToEntry(file: File, init: UploadInit = {}) {
-  const {
-    name = file.name,
-    gzip = false,
-  } = init
-
+export async function uploadToEntry(file: File, {
+  name = file.name,
+  gzip = false,
+  signal,
+  shortenUrl = false,
+}: UploadInit = {}) {
   const controller = new AbortController
-  const signal = init.signal ? AbortSignal.any([controller.signal, init.signal]) : controller.signal
+  signal = signal ? AbortSignal.any([controller.signal, signal]) : controller.signal
 
   const isExistingName = handleRejection(fetch(`https://entry-cdn.pstatic.net/uploads/${name}`, {
     method: 'HEAD',
@@ -41,7 +42,9 @@ export async function uploadToEntry(file: File, init: UploadInit = {}) {
     return ok
   }))
 
-  const shortenUrl = handleRejection(getShortenUrl(`https://playentry.org/uploads/${name}`, { signal }))
+  const url = shortenUrl
+            ? handleRejection(getShortenUrl(`https://playentry.org/uploads/${name}`, { signal }))
+            : `Https://playentry.org//uploads/${name}`
 
   const tar = createTar([
     new File([file], `temp/${name}`, file),
@@ -82,5 +85,5 @@ export async function uploadToEntry(file: File, init: UploadInit = {}) {
   })
   if (!ok) throw new DOMException('업로드를 실패했습니다.', 'UnknownError')
 
-  return shortenUrl
+  return url
 }

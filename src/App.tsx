@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import z from 'zod'
+import * as z from 'zod/mini'
 
 import {
   Form,
@@ -30,8 +30,6 @@ import { Spinner } from './components/ui/spinner'
 import './style.css'
 
 import { uploadToEntry } from './utils/upload'
-
-z.config(z.locales.ko())
 
 const allowedExts = [
   '.jpg',
