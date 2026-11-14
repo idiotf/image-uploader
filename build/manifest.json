@@ -1,7 +1,7 @@
 {
   "name": "Image Uploader",
   "description": "엔트리에 이미지 또는 소리를 업로드해줍니다.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "manifest_version": 3,
   "action": {
     "default_popup": "dist/index.html"
